@@ -1,0 +1,46 @@
+This is procedure followed for compiling kernel enabled with MPTCP. 
+The kernel is locally built on rpi3 board running ubuntu mate 16.04
+
+1) Extract the tar ball linux-rpi-4.1.y_MPTCP.tar.gz using command
+	
+	tar -xvf linux-rpi-4.1.y_MPTCP.tar.gz
+
+2) Configure the kernel:
+
+For configuring the kernel, either you should modify old .config file by enabling MPTCP and other configuration (as specified in <https://multipath-tcp.org/pmwiki.php/Users/DoItYourself>) or use the config file 'mptcp_config' that is uploaded along with the kernel tar ball.
+There are two ways of doing this. (Prefer simple method)
+
+Simple method: 
+
+Copy the mptcp_config file into the kernel folder as .config file 
+	
+	cd linux-rpi-4.1.y
+	cp ../mptcp_config .config
+
+Full_configuration method:
+	
+	sudo apt-get install -y libncurses5-dev
+	cd linux-rpi-4.1.y
+	make mptcp_defconfig
+	make menuconfig
+
+A configuration GUI opens. Save the configuration and exit
+
+3) Build and install the kernel, modules, and Device Tree blobs; this step takes a long time. Get into the directory of kernel folder 
+
+   Run the following commands one after the other
+
+	make -j4 zImage modules dtbs
+	sudo make modules_install 
+	sudo cp arch/arm/boot/dts/*.dtb /boot/ 
+	sudo cp arch/arm/boot/dts/overlays/*.dtb* /boot/overlays/ 
+	sudo cp arch/arm/boot/dts/overlays/README /boot/overlays/
+
+4) Before executing the below command, it is better to save the old kernel7.img file in /boot folder by renaming it as kernel7-old.img.
+	sudo mv /boot/kernel7.img /boot/kernel7-old.img
+
+Now install the new kernel by running the command
+
+	sudo scripts/mkknlimg arch/arm/boot/zImage /boot/$KERNEL.img
+
+REBOOT the rpi3 board to load new kernel
